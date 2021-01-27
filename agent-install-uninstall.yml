@@ -8,32 +8,32 @@
     customUser: "{{ agentuser | default('') }}"
     internal_cmd: ""
   tasks:
-  - name: 
+  - name: myTest1
     include_vars:
       file: roles/common/vars/agentconfig.yml
       name: config
     run_once: true
   - name:
     block:
-    - name:
+    - name: myTest2
       set_fact: 
         agent_cmd: " -K {{ config['api_key'] }} -S {{ config['api_secret'] }} -s {{ config['api_server'] }} -c {{ config['client_id'] }} -f {{ config['features'] }}"
       delegate_to: 127.0.0.1
       run_once: true
       when: config['connectionType'] != "proxy"
-    - name:
+    - name: myTest3
       set_fact:
         agent_cmd: " -K {{ config['api_key'] }} -S {{ config['api_secret'] }} -s {{ config['api_server'] }} -c {{ config['client_id'] }} -m {{ config['connectionType'] }} -x {{ config['proxy_server'] }} -p {{ config['proxy_port'] }} -t {{ config['proxy_proto'] }} -f {{ config['features'] }}"
       delegate_to: 127.0.0.1
       run_once: true
       when: config['connectionType'] == "proxy"
-    - name:
+    - name: myTest4
       set_fact:
         agent_cmd: " -K {{ config['api_key'] }} -S {{ config['api_secret'] }} -s {{ config['api_server'] }} -c {{ config['client_id'] }} -m {{ config['connectionType'] }} -x {{ config['proxy_server'] }} -p {{ config['proxy_port'] }} -t {{ config['proxy_proto'] }} -U {{ config['proxy_user'] }} -P {{ config['proxy_passwd'] }} -f {{ config['features'] }}"
       delegate_to: 127.0.0.1
       run_once: true
       when: config['connectionType'] == "proxy" and config['proxy_user'] != "PROXY_USERNAME" and config['proxy_passwd'] != "PROXY_PASSWORD"
-    - name:
+    - name: myTest5
       set_fact:
         internal_cmd: "echo {{ ansible_password }} | sudo -S "
       ignore_errors: yes
@@ -49,15 +49,15 @@
       shell: "{{ pythonpath.stdout }} roles/common/files/downloadpackages.py {{ agent_cmd }}"
       delegate_to: 127.0.0.1
       run_once: true
-    - name:
+    - name: myTest6
       include_vars:
         file: roles/common/vars/agentversion.yml
         name: version
       run_once: true
-    - name:
+    - name: myTest7
       include_tasks: roles/agent-install-uninstall/install/tasks/deployagent.yml
       when: version['agentVersion'] != "none"
     when: typeOfExecution == "install"
-  - name:
+  - name: myTest8
     include_tasks: "roles/agent-install-uninstall/uninstall/tasks/{{ (ansible_facts['os_family'] | lower) }}.yml"
     when: typeOfExecution == "uninstall"
