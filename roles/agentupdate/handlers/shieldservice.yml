@@ -1,0 +1,6 @@
+- name: Starting OpsRamp Shield Service
+  shell: "{{ internal_cmd }} service opsramp-shield start"
+  args:
+    warn: no
+  no_log: True
+  register: installationLog

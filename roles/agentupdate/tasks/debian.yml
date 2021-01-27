@@ -1,0 +1,31 @@
+- name:
+  include_tasks: roles/common/tasks/debian-arch.yml
+- name:
+  block:
+    - name: Copying OpsRamp Agent binary from Ansible server to Target device
+      copy:
+        src: "roles/common/files/opsramp-agent_{{ version['agentVersion'] }}_{{ devicearchitecture }}.deb"
+        dest: "/tmp/opsramp-agent_{{ version['agentVersion'] }}_{{ devicearchitecture }}.deb"
+    - name:
+      include_tasks: stopservices.yml
+    - name: Updating OpsRamp Agent
+      shell: "{{ internal_cmd }}ISNONROOT={{ agentType }} dpkg -i --force-confnew /tmp/opsramp-agent_{{ version['agentVersion'] }}_{{ devicearchitecture }}.deb"
+      args:
+        warn: no
+      no_log: True
+      register: installationLog
+    - name: Initiating agent configuration update process
+      include_tasks: updateconfig.yml
+  when: ( ansible_distribution | lower == "ubuntu" and ansible_distribution_major_version | int > 9 ) or ( ansible_distribution | lower == "debian")
+  rescue:
+    - debug:
+        msg:
+        - "stderror: {{ installationLog.stderr }}"
+        - "stdout: {{ installationLog.stdout }}"
+        - "stdout_lines: {{ installationLog.stdout_lines }}"
+  always:
+    - name:  Removing OpsRamp Agent binary from target device
+      shell: "rm /tmp/opsramp-agent_{{ version['agentVersion'] }}_{{ devicearchitecture }}.deb"
+      args:
+        warn: no
+      ignore_errors: yes

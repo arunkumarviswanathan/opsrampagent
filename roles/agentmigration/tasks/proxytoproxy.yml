@@ -1,0 +1,25 @@
+- name:
+  block:
+  - name: migrating agents from proxy to proxy or direct to proxy
+    shell: if [ "$(cat /opt/opsramp/agent/conf/configuration.properties | grep 'proxy_user')" != "" ];then echo {{ internal_cmd }} | sudo -S sed -r 's/connection_type(\s)*=(\s)*(proxy|cloud)(\s)*/connection_type = proxy/;s/proxy_server(\s)*=.*/proxy_server = {{ proxyServerInput }}/;s/proxy_port(\s)*=.*/proxy_port = {{ proxyServerPort }}/;s/proxy_user(\s)*=.*/proxy_user = {{ proxyUsername }}/;s/proxy_password(\s)*=.*/proxy_password = {{ proxyPasswd }}/;s/proxy_proto(\s)*=.*/proxy_proto = {{ proxyProtocol }}/;s/proxy_updatedb(\s)*=.*/proxy_updatedb = 1/' -i /opt/opsramp/agent/conf/configuration.properties;else echo {{ internal_cmd }} | sudo -S sed -r 's/connection_type(\s)*=(\s)*(proxy|cloud)(\s)*/connection_type = proxy/;s/proxy_server(\s)*=.*/proxy_server = {{ proxyServerInput }}/;s/proxy_port(\s)*=.*/proxy_port = {{ proxyServerPort }}/;s/\[Proxy\]/\[Proxy\]\nproxy_user = {{ proxyUsername }}\nproxy_password = {{ proxyPasswd }}/;s/proxy_proto(\s)*=.*/proxy_proto = {{ proxyProtocol }}/;s/proxy_updatedb(\s)*=.*/proxy_updatedb = 1/' -i /opt/opsramp/agent/conf/configuration.properties;fi
+    args:
+      warn: no
+    no_log: True
+    register: failureLog
+    notify: Restart agent service
+    when: ansible_user != "root"
+  - name:
+    shell: if [ "$(cat /opt/opsramp/agent/conf/configuration.properties | grep 'proxy_user')" != "" ];then sed -r 's/connection_type(\s)*=(\s)*(proxy|cloud)(\s)*/connection_type = proxy/;s/proxy_server(\s)*=.*/proxy_server = {{ proxyServerInput }}/;s/proxy_port(\s)*=.*/proxy_port = {{ proxyServerPort }}/;s/proxy_user(\s)*=.*/proxy_user = {{ proxyUsername }}/;s/proxy_password(\s)*=.*/proxy_password = {{ proxyPasswd }}/;s/proxy_proto(\s)*=.*/proxy_proto = {{ proxyProtocol }}/;s/proxy_updatedb(\s)*=.*/proxy_updatedb = 1/' -i /opt/opsramp/agent/conf/configuration.properties;else sed -r 's/connection_type(\s)*=(\s)*(proxy|cloud)(\s)*/connection_type = proxy/;s/proxy_server(\s)*=.*/proxy_server = {{ proxyServerInput }}/;s/proxy_port(\s)*=.*/proxy_port = {{ proxyServerPort }}/;s/\[Proxy\]/\[Proxy\]\nproxy_user = {{ proxyUsername }}\nproxy_password = {{ proxyPasswd }}/;s/proxy_proto(\s)*=.*/proxy_proto = {{ proxyProtocol }}/;s/proxy_updatedb(\s)*=.*/proxy_updatedb = 1/' -i /opt/opsramp/agent/conf/configuration.properties;fi
+    args:
+      warn: no
+    no_log: True
+    register: failureLog
+    notify: Restart agent service
+    when: ansible_user == "root"
+  rescue:
+    - fail:
+        msg:
+        - "stderror: {{ failureLog.stderr }}"
+        - "stdout: {{ failureLog.stdout }}"
+        - "stdout_lines: {{ failureLog.stdout_lines }}"
+

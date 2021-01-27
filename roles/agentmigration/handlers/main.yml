@@ -1,0 +1,22 @@
+  - name:
+    block:
+    - name:
+      shell: "echo {{ internal_cmd }} | sudo -S service opsramp-agent restart"
+      args:
+        warn: no
+      no_log: True
+      register: failureLog
+      when: ansible_user != "root"
+    - name:
+      shell: "service opsramp-agent restart"
+      args:
+        warn: no
+      no_log: True
+      register: failureLog
+      when: ansible_user == "root"
+    rescue:
+      - debug:
+          msg:
+          - "stderror: {{ failureLog.stderr }}"
+          - "stdout: {{ failureLog.stdout }}"
+          - "stdout_lines: {{ failureLog.stdout_lines }}"

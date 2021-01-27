@@ -1,0 +1,11 @@
+api_key: cXPttQsma9Sqhur62rdJVeJgEPHBGGeP 
+api_secret: gKAYV6PHhCKs6zqm8SmMYRAQVXu2J7mKHvWfPnSjFTepUT9QPyGyhj6fe2c6BscW
+api_server: hpe-dev.api.try.opsramp.com
+client_id: client_25888
+proxy_server: 172.20.21.65
+proxy_port: 3128
+connectionType: proxy
+proxy_user: PROXY_USERNAME
+proxy_passwd: PROXY_PASSWORD
+proxy_proto: PROXY_PROTO
+features: agent:RemoteCommand,agent:PatchManagement,agent:Automation,agent:RemoteConsole

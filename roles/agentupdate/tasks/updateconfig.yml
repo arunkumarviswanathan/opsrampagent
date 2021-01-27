@@ -1,0 +1,16 @@
+- name: Getting local device time
+  shell: date +"%d-%m-%Y %H:%M:%S"
+  args:
+    warn: no
+  register: updatedTimestamp
+  ignore_errors: true
+- name: Updating agent configuration
+  shell: echo {{ ansible_password }} | sudo -S sed -r 's/version(\s)*=.*/version = {{ version['agentVersion'] }}/;s/updated_date(\s)*=.*/updated_date = {{ updatedTimestamp.stdout }}/' -i /opt/opsramp/agent/conf/configuration.properties
+  args:
+    warn: no
+  when: ansible_user != "root"
+- name: Updating agent configuration
+  shell: sed -r 's/version(\s)*=.*/version = {{ version['agentVersion'] }}/;s/updated_date(\s)*=.*/updated_date = {{ updatedTimestamp.stdout }}/' -i /opt/opsramp/agent/conf/configuration.properties
+  args:
+    warn: no
+  when: ansible_user == "root"

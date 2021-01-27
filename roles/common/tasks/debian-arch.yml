@@ -1,0 +1,11 @@
+- name:
+  set_fact:
+    devicearchitecture: "{{ ansible_architecture }}"
+- name:
+  set_fact:
+    devicearchitecture: i686
+  when: ansible_architecture == "i386"
+- name:
+  set_fact:
+    devicearchitecture: amd64
+  when: ansible_architecture == "x86_64"

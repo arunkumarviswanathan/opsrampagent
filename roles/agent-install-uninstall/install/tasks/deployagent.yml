@@ -1,0 +1,14 @@
+ - name: Checking for agent service on target device
+   shell: "{{ internal_cmd }} service opsramp-agent status"
+   register: servicestatus
+   ignore_errors: yes
+   no_log: True
+ - name:
+   block:
+     - name:
+       include_tasks: "{{ (ansible_facts['os_family'] | lower) }}.yml"
+       when: servicestatus.stdout == ""
+     - name:
+       include_tasks: uninstall-install.yml
+       when: servicestatus.stdout != ""
+   when: (servicestatus.stdout == "") or (servicestatus.stdout != "" and removeandinstall == "yes")

@@ -1,0 +1,16 @@
+- name:
+  block:
+  - name: Uninstalling agents from the device
+    shell: "{{ internal_cmd }}dpkg -P opsramp-agent"
+    args:
+      warn: no
+    no_log: True
+    register: failureLog 
+  rescue:
+    - fail:
+       msg:
+       - "stderror: {{ failureLog.stderr }}"
+       - "stdout: {{ failureLog.stdout }}"
+       - "stdout_lines: {{ failureLog.stdout_lines }}"
+- name:
+  include_tasks: common.yml

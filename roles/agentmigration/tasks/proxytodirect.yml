@@ -1,0 +1,25 @@
+- name:
+  block:
+  - name: migrating agents from proxy to direct
+    shell: echo {{ internal_cmd }} | sudo -S sed -r 's/connection_type(\s)*=(\s)*(proxy|cloud)(\s)*/connection_type = cloud/;s/proxy_server(\s)*=.*/proxy_server = null/;s/proxy_port(\s)*=.*/proxy_port = null/;s/proxy_proto(\s)*=.*/proxy_proto =  /;s/proxy_user(\s)*=.*/proxy_user = /;s/proxy_password(\s)*=.*/proxy_password = /;s/proxy_updatedb(\s)*=.*/proxy_updatedb = 1/' -i /opt/opsramp/agent/conf/configuration.properties
+    no_log: True
+    args:
+      warn: no
+    register: failureLog
+    notify: Restart agent service
+    when: ansible_user != "root"
+  - name:
+    shell: sed -r 's/connection_type(\s)*=(\s)*(proxy|cloud)(\s)*/connection_type = cloud/;s/proxy_server(\s)*=.*/proxy_server = null/;s/proxy_port(\s)*=.*/proxy_port = null/;s/proxy_proto(\s)*=.*/proxy_proto =  /;s/proxy_user(\s)*=.*/proxy_user = /;s/proxy_password(\s)*=.*/proxy_password = /;s/proxy_updatedb(\s)*=.*/proxy_updatedb = 1/' -i /opt/opsramp/agent/conf/configuration.properties
+    args:
+      warn: no
+    no_log: True
+    notify: Restart agent service
+    register: failureLog
+    when: ansible_user == "root"
+  rescue:
+    - fail:
+        msg:
+        - "stderror: {{ failureLog.stderr }}"
+        - "stdout: {{ failureLog.stdout }}"
+        - "stdout_lines: {{ failureLog.stdout_lines }}"
+

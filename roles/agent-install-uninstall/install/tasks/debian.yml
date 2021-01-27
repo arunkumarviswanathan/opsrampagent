@@ -1,0 +1,41 @@
+- name:
+  include_tasks: roles/common/tasks/debian-arch.yml
+- name:
+  block:
+    - name: Copying OpsRamp Agent binary from Ansible server to Target device
+      copy:
+        src: "roles/common/files/opsramp-agent_{{ version['agentVersion'] }}_{{ devicearchitecture }}.deb"
+        dest: "/tmp/opsramp-agent_{{ version['agentVersion'] }}_{{ devicearchitecture }}.deb"
+      register: installationLog
+    - name: Installing patching dependency module
+      shell: "{{ internal_cmd }}apt-get -y install python-apt"
+      args:
+        warn: no
+      no_log: True
+      ignore_errors: yes
+      when: ansible_python['executable'] != "" and  config['features'] is search('agent:PatchManagement') 
+    - name: Installing OpsRamp agent on target device
+      shell: "{{ internal_cmd }}ISNONROOT={{ agentType }} AGENTUSER={{ customUser }} dpkg -i /tmp/opsramp-agent_{{ version['agentVersion'] }}_{{ devicearchitecture }}.deb"
+      args:
+        warn: no
+      no_log: True 
+      register: installationLog
+    - name: 
+      shell: "{{ internal_cmd }}/opt/opsramp/agent/bin/configure{{ agent_cmd }}"
+      args:
+        warn: no 
+      no_log: True
+      register: installationLog
+  when: ( ansible_distribution | lower == "ubuntu" and ansible_distribution_major_version | int > 9 ) or ( ansible_distribution | lower == "debian")
+  rescue:
+    - fail:
+        msg:
+        - "stderror: {{ installationLog.stderr }}"
+        - "stdout: {{ installationLog.stdout }}"
+        - "stdout_lines: {{ installationLog.stdout_lines }}"
+  always:
+    - name:  Removing OpsRamp Agent binary from target device
+      shell: "rm /tmp/opsramp-agent_{{ version['agentVersion'] }}_{{ devicearchitecture }}.deb"
+      args:
+        warn: no
+      ignore_errors: yes

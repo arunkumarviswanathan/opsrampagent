@@ -1,0 +1,4 @@
+- name: Uninstalling Agent on targt device
+  include_tasks: "roles/agent-install-uninstall/uninstall/tasks/{{ (ansible_facts['os_family'] | lower) }}.yml"
+- name: Reinstalling Agent on target devices
+  include_tasks: "{{ (ansible_facts['os_family'] | lower) }}.yml"

@@ -1,0 +1,6 @@
+- name:
+  shell: "{{ internal_cmd }} rmdir /opt/opsramp/"
+  args:
+    warn: no
+  no_log: True
+  ignore_errors: yes

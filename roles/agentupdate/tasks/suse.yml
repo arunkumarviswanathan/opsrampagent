@@ -1,0 +1,31 @@
+- name:
+  include_tasks: roles/common/tasks/rpm-arch.yml
+- name:
+  block:
+    - name: Copying OpsRamp Agent binary from Ansible server to Target device
+      copy:
+        src: "roles/common/files/opsramp-agent-{{ version['agentVersion'] }}.{{ devicearchitecture }}.rpm"
+        dest: "/tmp/opsramp-agent-{{ version['agentVersion'] }}.{{ devicearchitecture }}.rpm"
+    - name:
+      include_tasks: stopservices.yml
+    - name: Updating OpsRamp Agent
+      shell: "{{ internal_cmd }}ISNONROOT={{ agentType }} rpm -Uvh /tmp/opsramp-agent-{{ version['agentVersion'] }}.{{ devicearchitecture }}.rpm"
+      args:
+        warn: no
+      no_log: True 
+      register: installationLog
+    - name: Initiating agent configuration update process
+      include_tasks: updateconfig.yml
+  when: ( ansible_distribution | lower == "opensuse" ) or ( ansible_distribution | lower == "sles" and ansible_distribution_major_version | int > 10 )
+  rescue:
+    - debug:
+        msg:
+        - "stderror: {{ installationLog.stderr }}"
+        - "stdout: {{ installationLog.stdout }}"
+        - "stdout_lines: {{ installationLog.stdout_lines }}"
+  always:
+    - name: Removing OpsRamp Agent binary from target device
+      shell: "rm /tmp/opsramp-agent-{{ version['agentVersion'] }}.{{ devicearchitecture }}.rpm"
+      args:
+        warn: no
+      ignore_errors: yes
