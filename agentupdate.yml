@@ -1,0 +1,51 @@
+---
+- hosts: "{{ hostlist | default('all') }}"
+  gather_facts: yes
+  vars_files:
+    - roles/common/vars/agentconfig.yml
+  vars:
+    internal_cmd: ""
+    agent_cmd: " -K {{ api_key }} -S {{ api_secret }} -s {{ api_server }} -c {{ client_id }}"
+    agentType: "{{ isnonroot | default('') | lower }}"
+  handlers:
+  - name: Start agent service
+    include_tasks: roles/agentupdate/handlers/agentservice.yml
+  - name: Start shield service
+    include_tasks: roles/agentupdate/handlers/shieldservice.yml
+  tasks:
+  - name:
+    set_fact:
+      agent_cmd: " -K {{ api_key }} -S {{ api_secret }} -s {{ api_server }} -c {{ client_id }} -m {{ connectionType }} -x {{ proxy_server }} -p {{ proxy_port }} -t {{ proxy_proto }}"
+    run_once: true
+    when: connectionType == "proxy"
+  - name:
+    set_fact:
+      agent_cmd: " -K {{ api_key }} -S {{ api_secret }} -s {{ api_server }} -c {{ client_id }} -m {{ connectionType }} -x {{ proxy_server }} -p {{ proxy_port }} -t {{ proxy_proto }} -U {{ proxy_user }} -P {{ proxy_passwd }}"
+    delegate_to: 127.0.0.1
+    run_once: true
+    when: (connectionType == "proxy") and (proxy_user != "PROXY_USERNAME") and (proxy_passwd != "PROXY_PASSWORD")
+  - name: Getting system python path
+    shell: if [ "$(command -v python)" != '' ];then command -v python; elif [ "$(command -v python2)" != '' ];then command -v python2; else command -v python3; fi
+    register: pythonpath
+    delegate_to: 127.0.0.1
+    run_once: true
+    ignore_errors: yes
+  - name: Checking/downloading latest agent packages
+    shell: "{{ pythonpath.stdout }} roles/common/files/downloadpackages.py {{ agent_cmd }}"
+    delegate_to: 127.0.0.1
+    run_once: true
+  - name:
+    include_vars:
+      file: roles/common/vars/agentversion.yml
+      name: version
+    run_once: true
+    delegate_to: 127.0.0.1
+  - name:
+    set_fact:
+      internal_cmd: "echo {{ ansible_password }} | sudo -S "
+    ignore_errors: yes
+    no_log: True
+    when: ansible_user != "root"
+  - name:
+    include_tasks: "roles/agentupdate/tasks/{{ (ansible_facts['os_family'] | lower) }}.yml"
+    when: version['agentVersion'] != "none"

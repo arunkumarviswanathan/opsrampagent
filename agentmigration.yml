@@ -1,0 +1,30 @@
+---
+- hosts: "{{ hostlist | default('all') }}"
+  gather_facts: no
+  vars:
+     migrateTo: "{{ migrationType | default('none') | lower}}"
+     proxyServerInput: "{{ proxyServer | default('none') }}"
+     proxyServerPort: "{{ proxyPort | default('3128') }}"
+     proxyProtocol: "{{ proxyProto | default('http') }}"
+     proxyUsername: "{{ proxyUser | default('') }}"
+     proxyPasswd: "{{ proxyPassword | default('') }}"
+     internal_cmd: "" 
+  handlers:
+  - name: Restart agent service
+    include_tasks: roles/agentmigration/handlers/main.yml
+  tasks:
+  - name:
+    block:
+    - name:
+      set_fact:
+        internal_cmd: "{{ ansible_password }}"
+      ignore_errors: yes
+      no_log: True
+      when: ansible_user != "root"
+    - name: 
+      include_tasks: roles/agentmigration/tasks/proxytodirect.yml
+      when: migrateTo == "direct"
+    - name:
+      include_tasks: roles/agentmigration/tasks/proxytoproxy.yml
+      when: (migrateTo == "proxy") and ( proxyServerInput != "none") and ( proxyServerPort != "")
+    when: migrateTo == "proxy" or migrateTo == "direct"
